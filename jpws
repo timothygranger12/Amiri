@@ -1,0 +1,165 @@
+--// UI Setup
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local lp = Players.LocalPlayer
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "PlayerUtilityUI"
+gui.Parent = (gethui and gethui()) or lp.PlayerGui
+
+-- Main Frame
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 300, 0, 230)
+main.Position = UDim2.new(0.37, 0, 0.3, 0)
+main.Parent = gui
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+main.Active = true
+main.Draggable = true
+
+local corner = Instance.new("UICorner", main)
+corner.CornerRadius = UDim.new(0, 8)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Parent = main
+title.Text = "Player Utility"
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", title)
+
+------------------------------------------------------------
+-- JUMP POWER
+------------------------------------------------------------
+
+local jps = 50
+local jumpEnabled = false
+local jumpConn
+
+local function enableJumpPower(val)
+    jumpEnabled = val
+    if val then
+        jumpConn = RunService.RenderStepped:Connect(function()
+            local char = lp.Character
+            if not char then return end
+
+            local hum = char:FindFirstChild("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+
+            if hum and hrp and hum.Jump and hum.FloorMaterial ~= Enum.Material.Air then
+                hrp.Velocity = Vector3.new(0, (jps / 10) * 10, 0)
+            end
+        end)
+    else
+        if jumpConn then jumpConn:Disconnect() end
+        jumpConn = nil
+    end
+end
+
+-- Jump Toggle
+local jumpToggle = Instance.new("TextButton")
+jumpToggle.Parent = main
+jumpToggle.Size = UDim2.new(0.9, 0, 0, 35)
+jumpToggle.Position = UDim2.new(0.05, 0, 0.19, 0)
+jumpToggle.Text = "Jump Power: OFF"
+jumpToggle.TextScaled = true
+jumpToggle.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+jumpToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", jumpToggle)
+
+jumpToggle.MouseButton1Click:Connect(function()
+    jumpEnabled = not jumpEnabled
+    enableJumpPower(jumpEnabled)
+    jumpToggle.Text = jumpEnabled and "Jump Power: ON" or "Jump Power: OFF"
+end)
+
+-- Jump Slider
+local jumpSlider = Instance.new("TextBox")
+jumpSlider.Parent = main
+jumpSlider.Size = UDim2.new(0.9, 0, 0, 30)
+jumpSlider.Position = UDim2.new(0.05, 0, 0.35, 0)
+jumpSlider.Text = "Jump Strength: 50 → (50 - 70)"
+jumpSlider.TextScaled = true
+jumpSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+jumpSlider.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", jumpSlider)
+
+jumpSlider.FocusLost:Connect(function()
+    local value = tonumber(jumpSlider.Text)
+    if value and value >= 50 and value <= 70 then
+        jps = value
+    else
+        jumpSlider.Text = "Invalid (50 - 70)"
+    end
+end)
+
+------------------------------------------------------------
+-- WALKSPEED
+------------------------------------------------------------
+
+local speedMultiplier = 3
+local walkEnabled = false
+local wsConn
+
+local function enableWalkspeed(val)
+    walkEnabled = val
+    if val then
+        wsConn = RunService.RenderStepped:Connect(function()
+            local char = lp.Character
+            if not char then return end
+
+            local hum = char:FindFirstChild("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+
+            if hum and hrp and hum.MoveDirection.Magnitude > 0 then
+                local mv = hum.MoveDirection.Unit * (speedMultiplier * 10)
+                hrp.Velocity = Vector3.new(mv.X, hrp.Velocity.Y, mv.Z)
+            end
+        end)
+    else
+        if wsConn then wsConn:Disconnect() end
+        wsConn = nil
+    end
+end
+
+-- Walkspeed Toggle
+local walkToggle = Instance.new("TextButton")
+walkToggle.Parent = main
+walkToggle.Size = UDim2.new(0.9, 0, 0, 35)
+walkToggle.Position = UDim2.new(0.05, 0, 0.55, 0)
+walkToggle.Text = "Walkspeed: OFF"
+walkToggle.TextScaled = true
+walkToggle.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+walkToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", walkToggle)
+
+walkToggle.MouseButton1Click:Connect(function()
+    walkEnabled = not walkEnabled
+    enableWalkspeed(walkEnabled)
+    walkToggle.Text = walkEnabled and "Walkspeed: ON" or "Walkspeed: OFF"
+end)
+
+-- Walkspeed Slider
+local speedSlider = Instance.new("TextBox")
+speedSlider.Parent = main
+speedSlider.Size = UDim2.new(0.9, 0, 0, 30)
+speedSlider.Position = UDim2.new(0.05, 0, 0.71, 0)
+speedSlider.Text = "Walkspeed: 3 → (2 - 7)"
+speedSlider.TextScaled = true
+speedSlider.BackgroundColor3 = Color3.fromRGB(35,35,35)
+speedSlider.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", speedSlider)
+
+speedSlider.FocusLost:Connect(function()
+    local value = tonumber(speedSlider.Text)
+    if value and value >= 2 and value <= 7 then
+        speedMultiplier = value
+    else
+        speedSlider.Text = "Invalid (2 - 7)"
+    end
+end)
+
+print("✅ UI Loaded: Jump Power + Walkspeed")
